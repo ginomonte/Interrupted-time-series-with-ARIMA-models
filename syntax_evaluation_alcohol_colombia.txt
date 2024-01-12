@@ -1,0 +1,312 @@
+##### Evaluating the results of laws to penalize driving under alcohol influence in 
+Colombia and three principal cities #####
+#### Main syntaxis for interrupted time series analysis ####
+
+# download the libraries 
+library(forecast)
+library(astsa)
+library(foreign)
+library(tseries)
+library(rstatix)
+library(lmtest)
+library(Epi)
+library(nortest)
+
+View(data)
+
+#### Analysis for Colombia ####
+
+# Convert data to time series object
+data.ts.co <- ts(data[,12], start=c(1998), frequency=12)
+data.ts.co
+plot(data.ts.co)
+
+# Kruskal-wallis test for the series
+kruskal.test(rate_co~month, data=data)
+boxplot(data.ts.co~cycle(data.ts.co), main="Colombia", ylab="Mortality rate per 
+1,000,000", xlab="Month")
+
+# print inicial plot
+plot(data$time, data$rate_co, main="Colombia", ylab="Mortality rate per 1,000,000", ylim 
+= c(0.5,1.5),xlab="Year", type = "l",col="cadetblue4", xaxt="n")
+axis(1,at=0:20*12,labels=F)
+axis(1,at=0:20*12+6,tick=F,labels=1998:2018)
+
+points(data$rate_co,cex=0.7, col="cadetblue4")
+abline(v=147.5, lty=2)
+abline(v=174.5, lty=2)
+abline(v=192.5, lty=2)
+
+# print decomposition of time series
+decomp_c <- decompose(data.ts.co)
+plot(decomp_c)
+
+# check stationality of the time series
+ggseasonplot(data.ts.co, col=rainbow(12), year.labels = TRUE)
+
+# check stationarity of the time series
+adf.test(data.ts.co,alternative="stationary")
+
+# View ACF/PACF plots of undifferenced data and check if differentiation is needed
+ggtsdisplay(data.ts.co)
+ndiffs(data.ts.co)
+nsdiffs(data.ts.co)
+
+# Run ARIMA regresion col 
+model0 <- auto.arima(data.ts.co, xreg=cbind(data$level_1, data$trend_1, data$level_2, 
+data$trend_2, data$level_3, data$trend_3))
+model0
+round(ci.lin(model0),3)
+
+# Check residuals
+checkresiduals(model0)
+lillie.test(residuals(model0))
+tsdiag(model0)
+autoplot(data.ts.co)+autolayer(model0$fitted, series = "fit")
+
+model1 <- auto.arima(data.ts.co, xreg=cbind(data$level_1, data$trend_1, data$level_2, 
+data$trend_2, data$level_3, data$trend_3), ic="bic", stepwise=FALSE)
+model1
+round(ci.lin(model1),3)
+
+# Check residuals
+checkresiduals(model1)
+lillie.test(residuals(model1))
+tsdiag(model1)
+autoplot(data.ts.co)+autolayer(model1$fitted, series = "fit")
+
+model2 <- Arima(data.ts.co, xreg=cbind(data$level_1, data$trend_1, data$level_2, 
+data$trend_2, data$level_3, data$trend_3), order=c(2,1,4), seasonal=list(order=c(1,0,1), 
+period=12))
+model2
+round(ci.lin(model2),3)
+
+# Check residuals
+checkresiduals(model2)
+lillie.test(residuals(model2))
+tsdiag(model2)
+autoplot(data.ts.co)+autolayer(model2$fitted, series = "fit")
+
+#### Analysis for Bogot  functional city ####
+
+# Convert data to time series object
+data.ts.bo=ts(data[,15], start=c(1998), frequency=12)
+data.ts.bo
+plot(data.ts.bo)
+
+# Kruskal-wallis test for the series
+kruskal.test(rate_bo~month, data=data)
+boxplot(data.ts.bo~cycle(data.ts.bo), main="Bogota functional city", ylab="Mortality rate 
+per 1,000,000", xlab="Month")
+
+# print inicial plot
+plot(data$time, data$rate_bo, main="Bogot  functional city", ylab="Mortality rate per 
+1,000,000", ylim = c(0.2,1.8),xlab="Year", type = "l",col="cadetblue4", xaxt="n")
+axis(1,at=0:20*12,labels=F)
+axis(1,at=0:20*12+6,tick=F,labels=1998:2018)
+
+points(data$rate_bo,cex=0.7, col="cadetblue4")
+abline(v=147.5, lty=2)
+abline(v=174.5, lty=2)
+abline(v=192.5, lty=2)
+
+# print decomposition of time series
+decomp_b <-decompose(data.ts.bo)
+plot(decomp_b)
+
+# check stationality of the time series
+ggseasonplot(data.ts.bo, col=rainbow(12), year.labels = TRUE)
+
+# check stationarity of the time series
+adf.test(data.ts.bo,alternative="stationary")
+
+# View ACF/PACF plots of undifferenced data and check if differentiation is needed
+ggtsdisplay(data.ts.bo)
+ndiffs(data.ts.bo)
+nsdiffs(data.ts.bo)
+
+# Run ARIMA regresion for Bogot  time series
+model3 <-auto.arima(data.ts.bo, xreg=cbind(data$level_1, data$trend_1, data$level_2, 
+data$trend_2, data$level_3, data$trend_3))
+model3
+round(ci.lin(model3),3)
+
+# Check residuals
+checkresiduals(model3)
+lillie.test(residuals(model3))
+tsdiag(model3)
+autoplot(data.ts.bo)+autolayer(model3$fitted, series = "fit")
+
+model4 <-auto.arima(data.ts.bo, xreg=cbind(data$level_1, data$trend_1, data$level_2, 
+data$trend_2, data$level_3, data$trend_3), ic="bic", stepwise=FALSE)
+model4
+round(ci.lin(model4),3)
+
+# Check residuals
+checkresiduals(model4)
+lillie.test(residuals(model4))
+tsdiag(model4)
+autoplot(data.ts.bo)+autolayer(model4$fitted, series = "fit")
+
+model5 <-Arima(data.ts.co, xreg=cbind(data$level_1, data$trend_1, data$level_2, 
+data$trend_2, data$level_3, data$trend_3), order=c(0,1,1), seasonal=list(order=c(2,0,0), 
+period=12))
+model5
+round(ci.lin(model5),3)
+
+# Check residuals
+checkresiduals(model5)
+lillie.test(residuals(model5))
+tsdiag(model5)
+autoplot(data.ts.bo)+autolayer(model5$fitted, series = "fit")
+
+#### Analysis for Medellin functional city ####
+
+# Convert data to time series object
+data.ts.me=ts(data[,18], start=c(1998), frequency=12)
+data.ts.me
+plot(data.ts.me)
+
+# Kruskal-wallis test for the series
+kruskal.test(rate_me~month, data=data)
+boxplot(data.ts.me~cycle(data.ts.me), main="Medellin functional city", ylab="Mortality 
+rate per 1,000,000", xlab="Month")
+
+# print inicial plot
+plot(data$time, data$rate_me, main="Medell¡n functional city", ylab="Mortality rate per 
+1,000,000", ylim = c(0.5,3.5),xlab="Year", type = "l",col="cadetblue4", xaxt="n")
+axis(1,at=0:20*12,labels=F)
+axis(1,at=0:20*12+6,tick=F,labels=1998:2018)
+
+points(data$rate_me,cex=0.7, col="cadetblue4")
+abline(v=147.5, lty=2)
+abline(v=174.5, lty=2)
+abline(v=192.5, lty=2)
+
+# print decomposition of time series
+decomp_m <-decompose(data.ts.me)
+plot(decomp_m)
+
+# check stationality of the time series
+ggseasonplot(data.ts.me, col=rainbow(12), year.labels = TRUE)
+
+# check stationarity of the time series - Dickey-Fuller test
+adf.test(data.ts.me,alternative="stationary")
+
+# View ACF/PACF plots of undifferenced data and check if differentiation is needed
+ggtsdisplay(data.ts.me)
+ndiffs(data.ts.me)
+nsdiffs(data.ts.me)
+
+# Run ARIMA regresion for Medellin time series
+model6 <-auto.arima(data.ts.me, xreg=cbind(data$level_1, data$trend_1, data$level_2, 
+data$trend_2, data$level_3, data$trend_3))
+model6
+round(ci.lin(model6),3)
+
+# Check residuals
+checkresiduals(model6)
+Box.test(model6$residuals, type = "Ljung-Box")
+lillie.test(residuals(model6))
+tsdiag(model6)
+autoplot(data.ts.me)+autolayer(model6$fitted, series = "fit")
+
+model7 <-auto.arima(data.ts.me, xreg=cbind(data$level_1, data$trend_1, data$level_2, 
+data$trend_2, data$level_3, data$trend_3), ic="bic", stepwise=FALSE)
+model7
+round(ci.lin(model7),3)
+
+# Check residuals
+checkresiduals(model7)
+Box.test(model7$residuals,type = "Ljung-Box")
+lillie.test(residuals(model7))
+tsdiag(model7)
+autoplot(data.ts.me)+autolayer(model7$fitted, series = "fit")
+
+model8 <-Arima(data.ts.me, xreg=cbind(data$level_1, data$trend_1, data$level_2, 
+data$trend_2, data$level_3, data$trend_3), order=c(3,1,3), seasonal=list(order=c(1,0,0), 
+period=12))
+model8
+round(ci.lin(model8),3)
+
+# Check residuals
+checkresiduals(model8)
+lillie.test(residuals(model8))
+tsdiag(model8)
+autoplot(data.ts.me)+autolayer(model8$fitted, series = "fit")
+
+#### Analysis for Cali functional city ####
+
+# Convert data to time series object
+data.ts.ca=ts(data[,21], start=c(1998), frequency=12)
+data.ts.ca
+plot(data.ts.ca)
+
+# Kruskal-wallis test for the series
+kruskal.test(rate_ca~month, data=data)
+boxplot(data.ts.ca~cycle(data.ts.ca), main="Cali functional city", ylab="Mortality rate per 
+1,000,000", xlab="Month")
+
+# print inicial plot
+plot(data$time, data$rate_ca, main="Cali functional city", ylab="Mortality rate per 
+1.000.000", ylim = c(0.10,3.5),xlab="Year", type = "l",col="cadetblue4", xaxt="n")
+axis(1,at=0:20*12,labels=F)
+axis(1,at=0:20*12+6,tick=F,labels=1998:2018)
+
+points(data$rate_ca,cex=0.7, col="cadetblue4")
+abline(v=147.5, lty=2)
+abline(v=174.5, lty=2)
+abline(v=192.5, lty=2)
+
+# print decomposition of time series
+decomp_ca <-decompose(data.ts.ca)
+plot(decomp_ca)
+
+# check stationality of the time series
+ggseasonplot(data.ts.ca, col=rainbow(12), year.labels = TRUE)
+
+# check stationarity of the time series - Dickey-Fuller test
+adf.test(data.ts.ca,alternative="stationary")
+
+# View ACF/PACF plots of undifferenced data and check if differentiation is needed
+ggtsdisplay(data.ts.ca)
+ndiffs(data.ts.ca)
+nsdiffs(data.ts.ca)
+
+# Run ARIMA regresion for Medellin time series
+model9 <-auto.arima(data.ts.ca, xreg=cbind(data$level_1, data$trend_1, data$level_2, 
+data$trend_2, data$level_3, data$trend_3))
+model9
+round(ci.lin(model9),3)
+
+# Check residuals
+checkresiduals(model9)
+Box.test(model9$residuals, type = "Ljung-Box")
+lillie.test(residuals(model9))
+tsdiag(model9)
+autoplot(data.ts.ca)+autolayer(model9$fitted, series = "fit")
+
+model10 <-auto.arima(data.ts.ca, xreg=cbind(data$level_1, data$trend_1, data$level_2, 
+data$trend_2, data$level_3, data$trend_3), ic="bic", stepwise=FALSE)
+model10
+round(ci.lin(model10),3)
+
+# Check residuals
+checkresiduals(model10)
+Box.test(model10$residuals,type = "Ljung-Box")
+lillie.test(residuals(model10))
+tsdiag(model10)
+autoplot(data.ts.ca)+autolayer(model10$fitted, series = "fit")
+
+model11 <-Arima(data.ts.ca, xreg=cbind(data$level_1, data$trend_1, data$level_2, 
+data$trend_2, data$level_3, data$trend_3), order=c(1,0,2), seasonal=list(order=c(2,0,3), 
+period=12))
+model11
+round(ci.lin(model11),3)
+
+# Check residuals
+checkresiduals(model11)
+lillie.test(residuals(model11))
+tsdiag(model11)
+autoplot(data.ts.ca)+autolayer(model11$fitted, series = "fit")
+
